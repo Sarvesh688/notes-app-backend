@@ -1,53 +1,68 @@
 # Notes App — Backend API
 
-A multi-user notes REST API built with Node.js, Express, Prisma, and PostgreSQL.
+A multi-user notes REST API built with Node.js, Express, Prisma ORM, and PostgreSQL.
 
-## Stack
+## Live Demo
+
+> Deployed on Render: `https://your-app.onrender.com`
+> API Docs (Swagger): `https://your-app.onrender.com/docs`
+
+---
+
+## Tech Stack
 
 | Layer      | Technology              |
 |------------|-------------------------|
 | Backend    | Node.js + Express       |
-| Database   | PostgreSQL               |
+| Database   | PostgreSQL (Neon)       |
 | ORM        | Prisma                  |
 | Auth       | JWT + bcrypt            |
 | API Docs   | Swagger (OpenAPI 3.0)   |
 | Deployment | Render                  |
 
+---
+
 ## Features
 
-- User registration & JWT authentication
+- User registration and login with JWT authentication
 - Create, read, update, delete notes
 - Share notes with other users by email
-- **Pin notes** — pinned notes appear at the top of the list
+- **Pin notes** — pinned notes always appear at the top of the list
 - **Full-text search** — search notes by keyword across title and content
 - **Pagination** — paginate the notes list with `page` and `limit` params
 - Swagger UI at `/docs` and raw OpenAPI JSON at `/openapi.json`
+- UUID validation on all note ID parameters
+- Proper error handling with meaningful status codes
+
+---
 
 ## API Endpoints
 
-| Method | Path              | Auth | Description                        |
-|--------|-------------------|------|------------------------------------|
-| POST   | /register         | No   | Register new user                  |
-| POST   | /login            | No   | Login, returns JWT                 |
-| GET    | /notes            | Yes  | Get all notes (paginated)          |
-| GET    | /notes/:id        | Yes  | Get note by ID                     |
-| POST   | /notes            | Yes  | Create note                        |
-| PUT    | /notes/:id        | Yes  | Update note                        |
-| DELETE | /notes/:id        | Yes  | Delete note                        |
-| POST   | /notes/:id/share  | Yes  | Share note with user by email      |
-| PATCH  | /notes/:id/pin    | Yes  | Toggle pin status                  |
-| GET    | /search?q=keyword | Yes  | Full-text search                   |
-| GET    | /openapi.json     | No   | OpenAPI 3.0 spec                   |
-| GET    | /docs             | No   | Swagger UI                         |
-| GET    | /about            | No   | Developer info                     |
+| Method | Path                  | Auth | Description                        |
+|--------|-----------------------|------|------------------------------------|
+| POST   | /register             | No   | Register new user                  |
+| POST   | /login                | No   | Login, returns JWT                 |
+| GET    | /notes                | Yes  | Get all notes (paginated)          |
+| GET    | /notes/:id            | Yes  | Get note by ID                     |
+| POST   | /notes                | Yes  | Create note                        |
+| PUT    | /notes/:id            | Yes  | Update note (owner only)           |
+| DELETE | /notes/:id            | Yes  | Delete note (owner only)           |
+| POST   | /notes/:id/share      | Yes  | Share note with user by email      |
+| PATCH  | /notes/:id/pin        | Yes  | Toggle pin status (owner only)     |
+| GET    | /search?q=keyword     | Yes  | Full-text search across notes      |
+| GET    | /openapi.json         | No   | OpenAPI 3.0 spec                   |
+| GET    | /docs                 | No   | Swagger UI                         |
+| GET    | /about                | No   | Developer info                     |
+
+---
 
 ## Local Setup
 
 ### 1. Clone and install
 
 ```bash
-git clone <your-repo-url>
-cd notes-app
+git clone https://github.com/Sarvesh688/notes-app-backend.git
+cd notes-app-backend
 npm install
 ```
 
@@ -57,9 +72,10 @@ npm install
 cp .env.example .env
 ```
 
-Edit `.env`:
+Edit `.env` with your values:
 ```
-DATABASE_URL="postgresql://user:password@localhost:5432/notesdb"
+DATABASE_URL="postgresql://user:password@host/dbname?sslmode=require"
+DATABASE_URL_UNPOOLED="postgresql://user:password@host/dbname?sslmode=require"
 JWT_SECRET="your-secret-key"
 JWT_EXPIRES_IN="7d"
 PORT=3000
@@ -68,79 +84,98 @@ PORT=3000
 ### 3. Set up the database
 
 ```bash
-npx prisma migrate deploy
+npx prisma db push
 npx prisma generate
 ```
 
 ### 4. Run the server
 
 ```bash
-# Development
+# Development (auto-restart)
 npm run dev
 
 # Production
 npm start
 ```
 
+Server runs at `http://localhost:3000`
+Swagger UI at `http://localhost:3000/docs`
+
+---
+
 ## Deployment on Render
 
-### Step 1: Create a free PostgreSQL database on Neon
+### Step 1 — Get a free PostgreSQL DB from [neon.tech](https://neon.tech)
+1. Sign up → New Project → copy the connection string
 
-1. Go to [neon.tech](https://neon.tech) and sign up
-2. Create a new project
-3. Copy the connection string (it looks like `postgresql://user:pass@host/dbname?sslmode=require`)
-
-### Step 2: Push code to GitHub
-
+### Step 2 — Push code to GitHub
 ```bash
-git init
 git add .
-git commit -m "Initial commit"
-git remote add origin https://github.com/yourusername/notes-app.git
-git push -u origin main
+git commit -m "deploy"
+git push
 ```
 
-### Step 3: Deploy on Render
+### Step 3 — Deploy on [render.com](https://render.com)
+1. New → Web Service → connect your GitHub repo
+2. **Build Command:** `npm install && npx prisma generate && npx prisma db push`
+3. **Start Command:** `node src/index.js`
+4. Add environment variables:
+   - `DATABASE_URL`
+   - `DATABASE_URL_UNPOOLED`
+   - `JWT_SECRET`
+   - `JWT_EXPIRES_IN` = `7d`
+5. Deploy
 
-1. Go to [render.com](https://render.com) and sign up
-2. Click **New → Web Service**
-3. Connect your GitHub repo
-4. Configure:
-   - **Build Command:** `npm install && npx prisma generate && npx prisma migrate deploy`
-   - **Start Command:** `node src/index.js`
-5. Add environment variables:
-   - `DATABASE_URL` → your Neon connection string
-   - `JWT_SECRET` → any long random string
-   - `JWT_EXPIRES_IN` → `7d`
-6. Click **Deploy**
-
-Your API will be live at `https://your-app-name.onrender.com`
-
-## Docker
-
-```bash
-docker build -t notes-app .
-docker run -p 3000:3000 --env-file .env notes-app
-```
+---
 
 ## Project Structure
 
 ```
 notes-app/
 ├── prisma/
-│   ├── schema.prisma          # DB schema
+│   ├── schema.prisma          # DB schema (User, Note, SharedNote)
 │   └── migrations/            # SQL migrations
 ├── src/
 │   ├── config/
 │   │   ├── prisma.js          # Prisma client singleton
-│   │   └── swagger.js         # Swagger setup
-│   ├── controllers/           # Request handlers
+│   │   └── swagger.js         # Swagger/OpenAPI setup
+│   ├── controllers/           # Request validation + response shaping
+│   │   ├── auth.controller.js
+│   │   ├── note.controller.js
+│   │   └── search.controller.js
 │   ├── middleware/
-│   │   └── auth.middleware.js # JWT verification
-│   ├── routes/                # Express routers with Swagger docs
-│   ├── services/              # Business logic
+│   │   └── auth.middleware.js # JWT verification + UUID validation
+│   ├── routes/                # Express routers with Swagger JSDoc
+│   │   ├── auth.routes.js
+│   │   ├── note.routes.js
+│   │   ├── search.routes.js
+│   │   └── about.routes.js
+│   ├── services/              # Business logic + Prisma queries
+│   │   ├── auth.service.js
+│   │   └── note.service.js
 │   └── index.js               # App entry point
+├── .env.example               # Environment variable template
+├── .gitignore
 ├── Dockerfile
 ├── render.yaml
 └── package.json
+```
+
+---
+
+## Architecture
+
+```
+Request → Routes → Controllers → Services → Prisma ORM → PostgreSQL
+                       ↑
+               Auth Middleware (JWT)
+```
+
+---
+
+## Docker
+
+```bash
+docker build -t notes-app .
+docker run -p 3000:3000 --env-file .env notes-app
 ```
