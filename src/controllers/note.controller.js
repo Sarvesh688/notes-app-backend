@@ -2,15 +2,28 @@ const noteService = require('../services/note.service');
 
 async function getAllNotes(req, res, next) {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 20;
+    const page = parseInt(req.query.page) || null;
+    const limit = parseInt(req.query.limit) || null;
 
-    if (page < 1 || limit < 1 || limit > 100) {
+    if (page !== null && (page < 1)) {
+      return res.status(400).json({ message: 'Invalid pagination parameters' });
+    }
+    if (limit !== null && (limit < 1 || limit > 100)) {
       return res.status(400).json({ message: 'Invalid pagination parameters' });
     }
 
-    const result = await noteService.getAllNotes(req.userId, { page, limit });
-    return res.status(200).json(result);
+    const result = await noteService.getAllNotes(req.userId, {
+      page: page || 1,
+      limit: limit || 20,
+    });
+
+    // If pagination params provided, return paginated response
+    // Otherwise return plain array as per assignment spec
+    if (page || limit) {
+      return res.status(200).json(result);
+    } else {
+      return res.status(200).json(result.data);
+    }
   } catch (err) {
     next(err);
   }

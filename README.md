@@ -4,8 +4,8 @@ A multi-user notes REST API built with Node.js, Express, Prisma ORM, and Postgre
 
 ## Live Demo
 
-> Deployed on Render: `https://your-app.onrender.com`
-> API Docs (Swagger): `https://your-app.onrender.com/docs`
+> Deployed on Render: `https://notes-app-backend-rb51.onrender.com`
+> API Docs (Swagger): `https://notes-app-backend-rb51.onrender.com/docs`
 
 ---
 

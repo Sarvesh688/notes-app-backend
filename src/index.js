@@ -14,6 +14,16 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Root route
+app.get('/', (req, res) => {
+  res.status(200).json({
+    message: 'Notes App API is running',
+    docs: '/docs',
+    openapi: '/openapi.json',
+    about: '/about',
+  });
+});
+
 // Swagger docs
 setupSwagger(app);
 
